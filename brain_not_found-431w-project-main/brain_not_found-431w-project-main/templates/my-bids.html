@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Bids | NittanyAuction</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f2f2f2;
+        }
+
+        .navbar {
+            background-color: white;
+            border-bottom: 2px solid #1e4fa1;
+            margin-bottom: 30px;
+        }
+
+        .brand-text .nittany {
+            color: #1e4fa1;
+            font-weight: bold;
+        }
+
+        .brand-text .auction {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 50px;
+        }
+
+        .section-header {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+
+        .table thead th {
+            border-top: none;
+            color: #1e4fa1;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        /* Custom badge sizing to match your seller template */
+        .badge {
+            font-size: 90%;
+            padding: 0.5em 0.7em;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand brand-text" href="/bidder">
+                <span class="nittany">Nittany</span><span class="auction">Auction</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bidderNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="bidderNavbar">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/bidder">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/my-bids">My Bids</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/watchlist">Watch list</a>
+                    </li>
+
+                    <li>
+                        <a class="nav-link" href="/profile">
+                            User Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact-helpdesk">Contact HelpDesk</a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <span class="nav-link text-muted">Bidder: <strong>{{ email }}</strong></span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link ml-2 position-relative" href="/notifications" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            {% if notification_count > 0 %}
+                            <span class="badge badge-danger" style="position:absolute;top:2px;right:-4px;font-size:0.6rem;padding:2px 5px;">{{ notification_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-sm btn-outline-danger ml-2" href="/login">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-11 dashboard-card">
+                <div class="section-header d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if error %}
+                            <div class="alert alert-danger mt-3">{{ error }}</div>
+                        {% endif %}
+                        <h2 class="mb-0">My Active & Past Bids</h2>
+                        <p class="text-muted small mb-0">Track your items and see if you're winning!</p>
+                    </div>
+                    <div class="btn-group">
+                        <a href="/my-bids?sort=id" class="btn btn-sm btn-outline-secondary">Newest</a>
+                        <a href="/my-bids?sort=status" class="btn btn-sm btn-outline-secondary">Sort by Status</a>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Item Title</th>
+                                <th>Your Bid</th>
+                                <th>Current High</th>
+                                <th>Bidding Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bid in listings %}
+                            <tr>
+                                <td>
+                                    <strong>{{ bid.Auction_Title }}</strong><br>
+                                    <small class="text-muted">{{ bid.Product_Name }}</small>
+                                </td>
+
+                                <td><strong>${{ "{:,.2f}".format(bid.bid_price | float) }}</strong></td>
+
+                                <td class="text-primary font-weight-bold">
+                                    ${{ "{:,.2f}".format(bid.Current_High_Bid | float) }}
+                                </td>
+
+                                <td>
+                                    {% if bid.display_status == "Leading" %}
+                                    <span class="badge badge-success">Leading</span>
+                                    {% elif bid.display_status == "Won" %}
+                                    <span class="badge badge-primary" style="background-color: #1e4fa1;">Won</span>
+                                    {% elif bid.display_status == "Outbid" %}
+                                    <span class="badge badge-danger">Outbid</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">{{ bid.display_status }}</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="d-flex align-items-center" style="gap: 8px;">
+                                    <a href="/item-details?item={{ bid.Listing_ID }}&seller={{ bid.Seller_Email }}&source=my-bids"
+                                        class="btn btn-sm btn-outline-primary">View</a>
+                                    {% if bid.display_status == "Won" and not bid.is_paid %}
+                                    <a href="/pay/{{ bid.Listing_ID }}?seller={{ bid.Seller_Email }}"
+                                        class="btn btn-sm btn-success">Pay</a>
+                                    {% elif bid.display_status == "Won" and bid.is_paid %}
+                                    <button disabled class="btn btn-sm btn-secondary">Paid</button>
+                                    {% if (bid.Listing_ID, bid.Seller_Email) in rated_listings %}
+                                    <button disabled class="btn btn-sm btn-secondary">Rated</button>
+                                    {% elif bid.Seller_Email in sellers_rated_today %}
+                                    <button disabled class="btn btn-sm btn-secondary" title="You already rated this seller today">Rated Today</button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-danger" data-toggle="modal"
+                                        data-target="#rateModal{{ bid.Listing_ID }}">
+                                        Rate
+                                    </button>
+
+                                    <!-- Modal for Rating-->
+                                    <div class="modal fade" id="rateModal{{ bid.Listing_ID }}" tabindex="-1"
+                                        role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="exampleModalLabel">Rate the Seller</h5>
+                                                    <button type="button" class="close" data-dismiss="modal"
+                                                        aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <form method="POST">
+                                                    <div class="modal-body">
+
+                                                        <div class="form-group">
+                                                            <!-- source w3school select-->
+                                                            <label for="rate">Choose a rating:</label>
+                                                            <select name="rate" id="rate">
+                                                                <option value="1">1</option>
+                                                                <option value="2">2</option>
+                                                                <option value="3">3</option>
+                                                                <option value="4">4</option>
+                                                                <option value="5">5</option>
+                                                            </select>
+                                                            <br><br>
+
+                                                            <label for="description"
+                                                                class="col-form-label">Description:</label>
+                                                            <!--settings to limit the decimal of the input-->
+                                                            <input type="text" class="form-control" id="description"
+                                                                name="description" placeholder="Description">
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-dismiss="modal">Close</button>
+                                                        <input type="hidden" name="listing_id"
+                                                            value="{{ bid.Listing_ID }}">
+                                                        <input type="hidden" name="seller"
+                                                            value="{{ bid.Seller_Email }}">
+                                                        <button type="submit" class="btn btn-primary">Rate</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    You haven't placed any bids yet. <br>
+                                    <a href="/bidder" class="btn btn-primary btn-sm mt-3">Browse Items</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script>
+        $('#myModal').on('shown.bs.modal', function () {
+            $('#myInput').trigger('focus')
+        })
+    </script>
+
+</body>
+
+</html>

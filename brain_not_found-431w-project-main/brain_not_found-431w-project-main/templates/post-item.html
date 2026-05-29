@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Post New Item | NittanyAuction</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <style>
+        body { background-color: #f2f2f2; }
+        .navbar { background-color: white; border-bottom: 2px solid #1e4fa1; margin-bottom: 30px; }
+        .brand-text .nittany { color: #1e4fa1; font-weight: bold; }
+        .brand-text .auction { color: #28a745; font-weight: bold; }
+        .post-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2.5rem;
+            margin-bottom: 50px;
+        }
+        .form-section-title {
+            color: #1e4fa1;
+            font-weight: bold;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group label { font-weight: 600; color: #555; }
+        .btn-post { background-color: #28a745; border: none; color: white; font-weight: bold; }
+        .btn-post:hover { background-color: #218838; color: white; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand brand-text" href="{{ url_for('seller') }}">
+                <span class="nittany">Nittany</span><span class="auction">Auction</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#sellerNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="sellerNavbar">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('seller') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('my_listing') }}">My Listings</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{{ url_for('post_item') }}">Post New Item</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="settings" role="button" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            Seller Tools
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="settings">
+                            <a class="dropdown-item" href="{{ url_for('seller_account') }}">Edit Account</a>
+                            <a class="dropdown-item" href="{{ url_for('seller_profile') }}">View Seller Profile</a>
+                            <a class="dropdown-item" href="{{ url_for('my_listing') }}">View Listing History</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('contact_helpdesk') }}">Contact HelpDesk</a>
+                        </div>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav ml-auto align-items-center">
+                    <li class="nav-item">
+                        <span class="nav-link text-muted mb-0">Seller: <strong>{{ email }}</strong></span>
+                    </li>
+                    {% if session.get('roles') and 'bidder' in session['roles'] %}
+                    <li class="nav-item">
+                        <a class="btn btn-sm btn-outline-info ml-2" href="/bidder">Switch to Bidder</a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="btn btn-sm btn-outline-danger ml-2" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10 post-card">
+            <h2 class="mb-4">Post a New Auction</h2>
+
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+            <form id="postItemForm" action="/post-item" method="POST">
+                <div class="form-section-title">Product Information</div>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label>Auction Title</label>
+                            <input type="text" name="auction_title" class="form-control" placeholder="e.g., Apple MacBook Pro 2026 M5 chip" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        {% macro render_node(node, depth=0) %}
+                            {# Create indentation based on how deep the category is #}
+                            <option value="{{ node.name }}">
+                                {{ ("&nbsp;" * (4 * depth)) | safe }}{% if depth > 0 %}&mdash; {% endif %}{{ node.name }}
+                            </option>
+
+                            {# If this category has children, call this same function for each child #}
+                            {% for child in node.children %}
+                                {{ render_node(child, depth + 1) }}
+                            {% endfor %}
+                        {% endmacro %}
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category" class="form-control" required>
+                            <option value="" disabled selected>-- Choose a Category --</option>
+                            {% for root_node in category_tree %}
+                                {{ render_node(root_node) }}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label>Product Name</label>
+                            <input type="text" name="product_name" class="form-control" placeholder="The formal name of the item" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" name="quantity" class="form-control" min="1" value="1" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Product Description</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Describe the condition, history, or features..." required></textarea>
+                </div>
+
+                <div class="form-section-title mt-4">Auction Settings</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Reserve Price ($)</label>
+                            <input type="number" step="0.01" name="reserve" class="form-control" placeholder="0.00" required>
+                            <small class="text-muted">Minimum price you are willing to accept.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Max Bids</label>
+                            <input type="number" name="max_bids" class="form-control" placeholder="e.g., 50" min="1" required>
+                            <small class="text-muted">Auction ends once this number of bids is reached.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="/seller" class="text-muted">Cancel and Exit</a>
+                <button type="button" class="btn btn-post px-5 py-2" onclick="validateAndShow()">
+                    Launch Auction
+                </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="confirmPostModal" tabindex="-1" role="dialog" aria-labelledby="postModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="postModalLabel" style="color: #1e4fa1;">Confirm New Listing</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to launch this auction for <strong>public bidding</strong>.</p>
+        <ul class="small text-muted">
+            <li>Your listing will be visible to all bidders immediately.</li>
+            <li>Ensure your <strong>Reserve Price</strong> and <strong>Max Bids</strong> are correct.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Go Back</button>
+        <button type="button" class="btn btn-success" onclick="document.getElementById('postItemForm').submit();">
+            Confirm & Post
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function validateAndShow() {
+    var form = document.getElementById('postItemForm');
+    if (form.checkValidity()) {
+        $('#confirmPostModal').modal('show');
+    } else {
+        form.reportValidity();
+    }
+}
+</script>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+</body>
+</html>
